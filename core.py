@@ -15,7 +15,7 @@ class Baymax(object):
 
     def run(self):
         str1 = "asdf ghhj"
-        str2 = "asdf tyui"
+        str2 = "asdf tyuia"
         variation = self._comparison(str1, str2)
         print self.appendBoldChanges(str1, str2)
         print variation
