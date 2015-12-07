@@ -1,49 +1,57 @@
 # -*- coding: utf-8 -*-
-
-from difflib import Differ
-import numpy as np
-
+import diff_match_patch as dmp_module
 
 class Baymax(object):
-	
-    def comparison(self, str1, str2):
-        variation = 0 # degree of variation
-        return variation
 
-    def appendBoldChanges(self, s1, s2):
-        "Adds <b></b> tags to words that are changed"
-        l1 = s1.split(' ')
-        l2 = s2.split(' ')
-        dif = list(Differ().compare(l1, l2))
-        return " ".join(['<b>'+i[2:]+'</b>' if i[:1] == '+' else i[2:] for i in dif if not i[:1] in '-?'])
+    MARK_DELETE = -1
+    MARK_INSERT = 1
+    MARK_EQUAL = 0
 
-    def leDistance(self, input_x, input_y):
-        xlen = len(input_x) + 1  # 此处需要多开辟一个元素存储最后一轮的计算结果
-        ylen = len(input_y) + 1
+    DIFF_NOCHANGE = ("G000000", "DIFF_NOCHANGE", "Text is unchanged")
+    DIFF_CUTOUT = ("G000001", "DIFF_CUTOUT", "Text has been cut out!")
+    DIFF_NEW = ("G000002", "DIFF_NEW", "Text has been newed!")
+    DIFF_LARGECHANGE = ("G000003", "DIFF_LARGECHANGE", "Text has a large change!")
+    DIFF_NORMALCHANGE = ("G000004", "DIFF_NORMALCHANGE", "Text has a normal change!")
+    DIFF_ABNORMALCHANGE = ("G000005", "DIFF_ABNORMALCHANGE", "Text has a abnormal change!")
 
-        dp = np.zeros(shape=(xlen, ylen), dtype=int)
-        for i in range(0, xlen):
-            dp[i][0] = i
-        for j in range(0, ylen):
-            dp[0][j] = j
+    SYMBOL_ABNORMAL = ['<div', '</div>', '<img']
 
-        for i in range(1, xlen):
-            for j in range(1, ylen):
-                if input_x[i - 1] == input_y[j - 1]:
-                    dp[i][j] = dp[i - 1][j - 1]
-                else:
-                    dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
-        return dp[xlen - 1][ylen - 1]
+    def match(self, text, keyword):
+        return text.find(keyword)
 
+    def comparison(self, oldText, newText):
+        dmp = dmp_module.diff_match_patch()
+        diffSections = dmp.diff_compute(oldText, newText, False, 1000)
+        return diffSections
+
+    def analyse(self, diffSections):
+        if len(diffSections) == 1:
+            if diffSections[0][0] == self.MARK_EQUAL:
+                return self.DIFF_NOCHANGE
+            elif diffSections[0][0] == self.MARK_DELETE:
+                return self.DIFF_CUTOUT
+            else:
+                return self.DIFF_NEW
+
+        elif len(diffSections) == 2 and diffSections[0][0] == self.MARK_DELETE and diffSections[0][0] == self.MARK_INSERT:
+            return self.DIFF_LARGECHANGE
+        else:
+            return self.DIFF_NORMALCHANGE
 
     def run(self):
         inputfile = open('input.txt', 'r')
         sourcefile = open('source.txt', 'r')
 
-        str1 = inputfile.read()
-        str2 = sourcefile.read()
-        print self.appendBoldChanges(str1, str2)
-        print self.leDistance(str1, str2)
+        oldText = sourcefile.read()
+        newText = inputfile.read()
+
+        for abnormal in self.SYMBOL_ABNORMAL:
+            if self.match(newText, abnormal) is not -1:
+                print self.DIFF_ABNORMALCHANGE
+
+        print self.comparison(oldText, newText)
+        print self.analyse(self.comparison(oldText, newText))
+
 
 if __name__ == '__main__':
     Baymax().run()
