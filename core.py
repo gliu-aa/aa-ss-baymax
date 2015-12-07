@@ -2,6 +2,7 @@
 import diff_match_patch as dmp_module
 import constant
 
+
 class Baymax(object):
 
     def match(self, text, keyword):
@@ -13,7 +14,6 @@ class Baymax(object):
         return diffSections
 
     def analyse(self, diffSections):
-
         if len(diffSections) == 1:
             if diffSections[0][0] == constant.MARK_EQUAL:
                 return constant.DIFF_NOCHANGE
@@ -38,7 +38,7 @@ class Baymax(object):
         newText = inputfile.read()
 
         for abnormal in constant.ABNORMAL_SYMBOLS:
-            if self.match(newText, abnormal) is not -1:
+            if self.match(newText, abnormal) is not constant.NOTFOUND:
                 print constant.DIFF_ABNORMALCHANGE
 
         print self.comparison(oldText, newText)
